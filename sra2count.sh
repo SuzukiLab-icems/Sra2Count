@@ -1,11 +1,24 @@
 #!/usr/sh
 
-##########################################################################################
-##sra2count.sh
-#Usage:
-#sh RNA.seq -i sra_file.txt -s mm -d paired -c 5
-##########################################################################################
-#Defining option
+###########################################################################
+#sra2count.sh
+#
+#	 Copyright (c) 2024, Noguchi Yuki (Jun Suzuki lab)
+#	 This software is released under the MIT License, see LICENSE (https://opensource.org/license/mit/).
+#    @citation: Noguchi, Y., Onodera, Y., Maruoka, M., Miyamoto, T., Kosako, H., Suzuki., J. 2024. In vivo CRISPR screening directly targeting testicular cells. Cell Genomics.
+#    @author:  Noguchi Yuki
+#    @contact: nyuhki21@gmail.com,jsuzuki@icems.kyoto-u.ac.jp
+#
+##REFERENCE
+#1.	SRA Toolkit: https://hpc.nih.gov/apps/sratoolkit.html
+#2. FastQC: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+#3. TrimGalore: https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
+#4. Li, H., Handsaker, R.E., Wysoker, A., Fennell, T., Ruan, J., Homer, N., Marth, G.T., Abecasis, G.R., and Durbin, R. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009; 25: 2078-2079. https://doi.org/10.1093/bioinformatics/btp352
+#5: Perțea, M., Kim, D., Pertea, G., Leek, J.T., and Salzberg, S.L. Transcript-level expression analysis of RNA-seq experiments with HISAT, StringTie and Ballgown. Nature Protocols. 2016; 11: 1650-1667. 10.1038/nprot.2016.095
+#6: Perțea, M., Pertea, G., Antonescu, C., Chang, T., Mendell, J.T., and Salzberg, S.L. StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nature Biotechnology. 2015; 33: 290-295. 10.1038/nbt.3122
+#7: Pertea, G., & Perțea, M. (2020). GFF Utilities: GffRead and GffCompare. F1000Research, 9.
+###########################################################################
+
 function usage {
     cat <<EOM
 Usage: $(basename "$0") [OPTION]...
@@ -18,7 +31,6 @@ EOM
     exit 2
 }
 
-#Definition
 while getopts ":i:s:d:c:h" optKey; do
     case "$optKey" in
 		i)
@@ -39,11 +51,10 @@ while getopts ":i:s:d:c:h" optKey; do
     esac
 done
 
-#Environment
 echo "augumentation: input=$i, species=$s, direction=$d, core=$c"
 mkdir ./result
 LIST=$(cat ${i})
-#SRA->fastq
+
 for SampleID in `echo ${LIST}`
     do
 		DIR=./result/${SampleID}
@@ -68,7 +79,6 @@ for SampleID in `echo ${LIST}`
 		fi
 done
 
-#FastQC(1st)>Trimming>FastQC(2nd)>Alignment>Count
 for SampleID in `echo ${LIST}`
 	do
 		DIR=./result/${SampleID}
@@ -149,7 +159,7 @@ for SampleID in `echo ${LIST}`
 			fi
 		fi
 done
-#PrepforBallgown,DEseq
+
 mkdir ./summary \
 	  ./result/ballgown
 for SampleID in `echo ${LIST}`
@@ -161,7 +171,7 @@ for SampleID in `echo ${LIST}`
 		echo ${SampleID} ./result/ballgown/${SampleID}/${SampleID}.bg.gtf \
 			>> ballgown_PATH.txt
 done
-#Merge
+
 if [ "${s}" = "hs" ]; then
 	./stringtie/stringtie --merge -p ${c} \
 		-G ./index/hg38.gtf \
@@ -173,7 +183,7 @@ else
 		-o ./summary/merge.gtf \
 		merge_list.txt
 fi
-#Ballgown file genration
+
 for SampleID in `echo ${LIST}`
 	do
 		DIR=./result/${SampleID}
@@ -183,11 +193,11 @@ for SampleID in `echo ${LIST}`
 			-o ./result/ballgown/${SampleID}/${SampleID}.bg.gtf \
 			-A ./summary/${SampleID}.tab
 done
-#2to3 -w ./stringtie/prepDE.py
+
 python ./stringtie/prepDE.py3 -i ballgown_PATH.txt
 mv gene_count_matrix.csv ./result/gene_raw_count.csv
 mv ./result/transcript_count_matrix.csv ./result/transcript_raw_count.csv
-#Estimation of annotation accuracy
+
 if [ "${s}" = "hs" ]; then
 	./gffcompare/gffcompare \
 		-r ./index/hg38.gtf \
