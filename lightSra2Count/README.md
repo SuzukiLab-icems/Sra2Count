@@ -37,7 +37,7 @@ Noguchi Yuki (Jun Suzuki lab)\
 Email: nyuhki21@gmail.com, jsuzuki@icems.kyoto-u.ac.jp
 
 ## Citation
-If you use lightSra2Count.sh in your research, please cite:\
+If you use `lightSra2Count.sh` in your research, please cite:\
 Noguchi, Y., Onodera, Y., Maruoka, M., Miyamoto, T., Kosako, H., Suzuki, J. 2024. "In vivo CRISPR screening directly targeting testicular cells." Cell Genomics.
 
 ## License
